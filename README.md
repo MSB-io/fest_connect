@@ -83,8 +83,8 @@ final event = ModalRoute.of(context)?.settings.arguments as Event?;
 ### B. Mandatory Field Validations
 Implemented using Flutter's `Form` and `GlobalKey<FormState>`:
 * **Student Name**: Non-empty, minimum 2 characters, strictly alphabetic (`^[a-zA-Z\s\.\']+$`).
-* **Roll Number**: Non-empty, minimum 3 characters, alphanumeric student ID pattern (`^[a-zA-Z0-9\-\/]+$`).
-* **Email Address**: Non-empty, RFC-compliant email regex (`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`).
+* **Roll Number**: Exactly 12 digits, strictly enforcing the institutional prefix `150096724` followed by 3 student-specific digits (`^150096724\d{3}$`), e.g., `150096724125`.
+* **College Email**: Institutional email format strictly enforcing domain `@isu.ac.in` and pattern `YYYY.name@isu.ac.in` (`^\d{4}\.[a-zA-Z0-9._]+@isu\.ac\.in$`), e.g., `2024.manthanb@isu.ac.in`.
 
 ---
 

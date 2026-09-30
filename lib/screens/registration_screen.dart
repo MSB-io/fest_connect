@@ -49,26 +49,24 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return 'Please enter your roll number';
     }
     final roll = value.trim();
-    if (roll.length < 3) {
-      return 'Roll number is too short';
-    }
-    // Alphanumeric check (e.g., CS2026-042 or 2026BCSE101)
-    final rollRegex = RegExp(r'^[a-zA-Z0-9\-\/]+$');
+    // Institutional roll number: 150096724 + 3 digits (12 digits total)
+    final rollRegex = RegExp(r'^150096724\d{3}$');
     if (!rollRegex.hasMatch(roll)) {
-      return 'Invalid roll number format (alphanumeric only)';
+      return 'Roll number must be 12 digits starting with 150096724 (e.g. 150096724125)';
     }
     return null;
   }
 
   String? _validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter your email address';
+      return 'Please enter your college email';
     }
     final email = value.trim();
+    // Institutional email format: YYYY.name@isu.ac.in
     final emailRegex =
-        RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+        RegExp(r'^\d{4}\.[a-zA-Z0-9._]+@isu\.ac\.in$', caseSensitive: false);
     if (!emailRegex.hasMatch(email)) {
-      return 'Please enter a valid email address';
+      return 'Must be a valid college email: YYYY.name@isu.ac.in';
     }
     return null;
   }
@@ -232,7 +230,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
                   // Roll Number Field
                   const Text(
-                    'Roll Number / Student ID',
+                    'Roll Number',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -242,8 +240,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _rollController,
+                    keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                      hintText: 'e.g. 2026BCSE042',
+                      hintText: 'e.g. 150096724125',
                       prefixIcon: Icon(Icons.badge_outlined, size: 20),
                     ),
                     validator: _validateRollNumber,
@@ -254,7 +253,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
                   // Email Address Field
                   const Text(
-                    'College / Personal Email',
+                    'College Email',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -266,7 +265,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
-                      hintText: 'e.g. student@college.edu',
+                      hintText: 'e.g. 2024.manthanb@isu.ac.in',
                       prefixIcon: Icon(Icons.mail_outline, size: 20),
                     ),
                     validator: _validateEmail,
