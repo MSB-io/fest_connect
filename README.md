@@ -1,6 +1,6 @@
-# FestConnect — College Fest Event Registration App
+# FestConnect: College Fest Event Registration App
 
-**B.Tech Computer Science Engineering & AI — Semester V**  
+**B.Tech Computer Science Engineering - Semester V**  
 **Subject:** Cross Platform Application  
 **Case Study:** 7. FestConnect (College Fest Event Registration App)  
 **Faculty / Guide:** Prof. Sneha Gawas  
