@@ -3,6 +3,13 @@ import '../models/event_model.dart';
 import '../services/event_service.dart';
 import '../theme/app_theme.dart';
 
+/// EventListScreen: The Home / Main Screen of the FestConnect App
+///
+/// Concepts Used:
+/// 1. StatefulWidget: The screen needs to redraw when the user selects different category filter chips.
+/// 2. Dart Getters: '_filteredEvents' computes the filtered list dynamically based on '_selectedCategory'.
+/// 3. Named Routes Navigation: Uses 'Navigator.pushNamed(context, '/detail', arguments: event)'.
+/// 4. Responsive Layout: Wrapped in ConstrainedBox(maxWidth: 680) so it looks centered and sleek on web/desktop.
 class EventListScreen extends StatefulWidget {
   const EventListScreen({super.key});
 
@@ -11,9 +18,13 @@ class EventListScreen extends StatefulWidget {
 }
 
 class _EventListScreenState extends State<EventListScreen> {
+  // Reference to our Singleton mock repository
   final EventService _eventService = EventService();
+
+  // Tracks the currently selected category filter
   String _selectedCategory = 'All';
 
+  // Available fest event categories
   final List<String> _categories = [
     'All',
     'Technical',
@@ -22,7 +33,7 @@ class _EventListScreenState extends State<EventListScreen> {
     'Creative',
   ];
 
-  // Helper to get events filtered by selected category
+  /// Dynamically filters the events list based on the chosen category chip
   List<Event> get _filteredEvents {
     if (_selectedCategory == 'All') {
       return _eventService.events;
@@ -35,9 +46,11 @@ class _EventListScreenState extends State<EventListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Top Navigation Bar
       appBar: AppBar(
         title: Row(
           children: [
+            // Decorative dark dot logo indicator
             Container(
               width: 8,
               height: 8,
@@ -51,6 +64,7 @@ class _EventListScreenState extends State<EventListScreen> {
           ],
         ),
         actions: [
+          // Button to navigate to the Organizer Participation Tracker
           IconButton(
             tooltip: 'View Registrations',
             icon: const Icon(Icons.confirmation_number_outlined, size: 20),
@@ -59,11 +73,14 @@ class _EventListScreenState extends State<EventListScreen> {
             },
           ),
         ],
+        // Subtle 1px bottom border
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(color: AppTheme.border, height: 1),
         ),
       ),
+
+      // Center layout with maximum width constraint for clean desktop/web rendering
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 680),
@@ -97,7 +114,7 @@ class _EventListScreenState extends State<EventListScreen> {
                 ),
               ),
 
-              // Category Filter Chips
+              // Category Filter ChoiceChips (Horizontal Scroll)
               SizedBox(
                 height: 48,
                 child: ListView.separated(
@@ -108,6 +125,7 @@ class _EventListScreenState extends State<EventListScreen> {
                   itemBuilder: (context, index) {
                     final cat = _categories[index];
                     final isSelected = _selectedCategory == cat;
+
                     return ChoiceChip(
                       label: Text(cat),
                       selected: isSelected,
@@ -126,6 +144,7 @@ class _EventListScreenState extends State<EventListScreen> {
                         ),
                       ),
                       onSelected: (selected) {
+                        // Update state to trigger UI rebuild with filtered list
                         setState(() {
                           _selectedCategory = cat;
                         });
@@ -137,7 +156,7 @@ class _EventListScreenState extends State<EventListScreen> {
 
               const SizedBox(height: 8),
 
-              // Events List (plain ListView with mock data)
+              // Events List section
               Expanded(
                 child: _filteredEvents.isEmpty
                     ? Center(
@@ -152,7 +171,8 @@ class _EventListScreenState extends State<EventListScreen> {
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                         itemCount: _filteredEvents.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 12),
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final event = _filteredEvents[index];
                           return _buildEventCard(context, event);
@@ -166,20 +186,24 @@ class _EventListScreenState extends State<EventListScreen> {
     );
   }
 
+  /// Builds an individual event card widget
   Widget _buildEventCard(BuildContext context, Event event) {
+    // Check seat availability conditions
     final bool isLowSeats = event.seatsRemaining > 0 && event.seatsRemaining <= 5;
     final bool isSoldOut = event.seatsRemaining <= 0;
 
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
+        // Tap to open event details screen
         onTap: () async {
-          // Open details and refresh list on return
+          // Pass event object as argument through named routes
           await Navigator.pushNamed(
             context,
             '/detail',
             arguments: event,
           );
+          // Re-render when returning to update seat count if student registered
           setState(() {});
         },
         child: Padding(
@@ -187,10 +211,11 @@ class _EventListScreenState extends State<EventListScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category Chip & Seats Badge
+              // Top Row: Category Tag & Seats Availability Badge
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // Category Tag badge
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -212,7 +237,7 @@ class _EventListScreenState extends State<EventListScreen> {
                     ),
                   ),
 
-                  // Seats remaining badge
+                  // Seats remaining badge with color-coded dot
                   Row(
                     children: [
                       Container(
@@ -222,7 +247,9 @@ class _EventListScreenState extends State<EventListScreen> {
                           shape: BoxShape.circle,
                           color: isSoldOut
                               ? AppTheme.badgeRed
-                              : (isLowSeats ? Colors.amber[700] : AppTheme.badgeGreen),
+                              : (isLowSeats
+                                  ? Colors.amber[700]
+                                  : AppTheme.badgeGreen),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -235,7 +262,9 @@ class _EventListScreenState extends State<EventListScreen> {
                           fontWeight: FontWeight.w600,
                           color: isSoldOut
                               ? AppTheme.badgeRed
-                              : (isLowSeats ? Colors.amber[800] : AppTheme.badgeGreen),
+                              : (isLowSeats
+                                  ? Colors.amber[800]
+                                  : AppTheme.badgeGreen),
                         ),
                       ),
                     ],
@@ -258,7 +287,7 @@ class _EventListScreenState extends State<EventListScreen> {
 
               const SizedBox(height: 10),
 
-              // Date and Venue
+              // Date and Venue Row
               Row(
                 children: [
                   const Icon(Icons.calendar_today_outlined,
@@ -304,16 +333,18 @@ class _EventListScreenState extends State<EventListScreen> {
                       color: AppTheme.textMuted,
                     ),
                   ),
+                  // Direct Register Button on card
                   ElevatedButton(
                     onPressed: isSoldOut
-                        ? null
+                        ? null // Disables button if event is sold out
                         : () async {
-                            // Direct named route with arguments to registration
+                            // Direct navigation to registration form with event argument
                             await Navigator.pushNamed(
                               context,
                               '/register',
                               arguments: event,
                             );
+                            // Refresh seat count on return
                             setState(() {});
                           },
                     style: ElevatedButton.styleFrom(

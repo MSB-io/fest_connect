@@ -1,13 +1,22 @@
 import '../models/event_model.dart';
 import '../models/registration_model.dart';
 
-/// Simple In-Memory Mock Service for FestConnect
-/// Stores mock events and registrations in Dart Lists (no external database).
+/// EventService: Central Mock Repository
+///
+/// Concepts Used:
+/// 1. Singleton Design Pattern: Guarantees that only ONE instance of EventService
+///    exists in memory throughout the app lifecycle, ensuring all screens read
+///    and modify the exact same mock data.
+/// 2. In-Memory State: Uses standard Dart Lists (RAM) instead of an external database,
+///    making it fast, 100% offline, and ideal for local demos.
 class EventService {
-  // Singleton pattern: ensures all screens share the exact same mock data
+  // Static private instance held in memory
   static final EventService _instance = EventService._internal();
+
+  // Factory constructor returning the single cached instance
   factory EventService() => _instance;
 
+  // Private named constructor called only once when the singleton is created
   EventService._internal() {
     _loadSampleEvents();
   }
@@ -16,9 +25,11 @@ class EventService {
   final List<Event> events = [];
   final List<Registration> registrations = [];
 
+  // Convenience getters to access the lists
   List<Event> get allEvents => events;
   List<Registration> get allRegistrations => registrations;
 
+  /// Populates the mock event list with sample college fest competitions
   void _loadSampleEvents() {
     events.addAll([
       Event(
@@ -84,16 +95,20 @@ class EventService {
     ]);
   }
 
-  // Find an event by its ID
+  /// Finds and returns an event by its unique ID
   Event? getEventById(String id) {
     try {
       return events.firstWhere((e) => e.id == id);
     } catch (_) {
-      return null;
+      return null; // Return null if no matching event is found
     }
   }
 
-  // Register student: decrements seat count and adds a registration record
+  /// Registers a student for an event:
+  /// 1. Checks that the event exists and has seats available (> 0)
+  /// 2. Decrements the available seats by 1
+  /// 3. Generates a new Registration record with a unique timestamped Pass ID
+  /// 4. Adds the registration to the central list and returns the record
   Registration? registerStudent({
     required String eventId,
     required String studentName,
@@ -101,14 +116,16 @@ class EventService {
     required String email,
   }) {
     final event = getEventById(eventId);
+
+    // Safeguard: prevent booking if event is full or does not exist
     if (event == null || event.seatsRemaining <= 0) {
       return null;
     }
 
-    // Decrease available seats in mock list
+    // Decrement available seats in memory
     event.seatsRemaining -= 1;
 
-    // Create new registration record
+    // Create a new registration entry with a unique Pass ID
     final registration = Registration(
       id: 'REG-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
       eventId: event.id,
@@ -119,7 +136,9 @@ class EventService {
       registeredAt: DateTime.now(),
     );
 
+    // Store in the central registrations log
     registrations.add(registration);
+
     return registration;
   }
 }

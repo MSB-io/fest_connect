@@ -2,22 +2,33 @@ import 'package:flutter/material.dart';
 import '../models/registration_model.dart';
 import '../theme/app_theme.dart';
 
+/// ConfirmationScreen: Displays the Generated Boarding-Pass / Ticket Receipt
+///
+/// Concepts Used:
+/// 1. StatelessWidget: Once generated, the ticket details do not change.
+/// 2. ModalRoute Arguments: Extracts the confirmed 'Registration' record.
+/// 3. Stack Clearing Navigation: Uses 'Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false)'
+///    to clear the previous navigation history and return cleanly to the home screen.
 class ConfirmationScreen extends StatelessWidget {
   const ConfirmationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Extract the confirmed registration record passed from the registration form
     final reg = ModalRoute.of(context)?.settings.arguments as Registration?;
 
     return Scaffold(
+      // AppBar with disabled back arrow (automaticallyImplyLeading: false)
       appBar: AppBar(
         title: const Text('Confirmation'),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: false, // Prevents pressing back into the submitted form
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(color: AppTheme.border, height: 1),
         ),
       ),
+
+      // Center container with max width constraint
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
@@ -28,11 +39,11 @@ class ConfirmationScreen extends StatelessWidget {
               children: [
                 const SizedBox(height: 20),
 
-                // Success check badge (clean black & white)
+                // Success Checkmark Badge (Clean monochrome circle with check icon)
                 Container(
                   width: 56,
                   height: 56,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppTheme.primary,
                     shape: BoxShape.circle,
                   ),
@@ -44,6 +55,7 @@ class ConfirmationScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
+                // Success Title & Subtitle
                 const Text(
                   'Registration Confirmed',
                   style: TextStyle(
@@ -65,7 +77,7 @@ class ConfirmationScreen extends StatelessWidget {
 
                 const SizedBox(height: 32),
 
-                // Clean Pass / Ticket Card
+                // Digital Ticket / Boarding-Pass Card
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -77,6 +89,7 @@ class ConfirmationScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Pass ID Header Row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -103,6 +116,7 @@ class ConfirmationScreen extends StatelessWidget {
                       const Divider(height: 1, color: AppTheme.border),
                       const SizedBox(height: 14),
 
+                      // Ticket Details Section
                       _buildTicketDetail('Event', reg?.eventName ?? '-'),
                       const SizedBox(height: 12),
                       _buildTicketDetail('Attendee', reg?.studentName ?? '-'),
@@ -123,12 +137,12 @@ class ConfirmationScreen extends StatelessWidget {
 
                 const SizedBox(height: 32),
 
-                // Button back to events
+                // Return to Home Action Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Navigate back to the root event list
+                      // Reset navigation history and route back to the main Event List
                       Navigator.pushNamedAndRemoveUntil(
                         context,
                         '/',
@@ -146,6 +160,7 @@ class ConfirmationScreen extends StatelessWidget {
     );
   }
 
+  /// Helper method to build key-value detail pairs for the ticket card
   Widget _buildTicketDetail(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

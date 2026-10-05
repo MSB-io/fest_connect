@@ -2,15 +2,25 @@ import 'package:flutter/material.dart';
 import '../services/event_service.dart';
 import '../theme/app_theme.dart';
 
+/// RegistrationsListScreen: Organizer Participation Tracker & Audit Log
+///
+/// Concepts Used:
+/// 1. Central Repository Access: Reads 'allRegistrations' directly from the shared 'EventService'.
+/// 2. Conditional Rendering: Displays an empty state icon and message if no students have registered yet.
+/// 3. ListView.separated: Renders student registration records in an efficient, separated list.
 class RegistrationsListScreen extends StatelessWidget {
   const RegistrationsListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Reference to the shared in-memory mock repository
     final eventService = EventService();
+
+    // Fetch the full list of recorded registrations
     final registrations = eventService.allRegistrations;
 
     return Scaffold(
+      // AppBar with title and subtle divider
       appBar: AppBar(
         title: const Text('Organizer Participation Log'),
         bottom: PreferredSize(
@@ -18,10 +28,13 @@ class RegistrationsListScreen extends StatelessWidget {
           child: Container(color: AppTheme.border, height: 1),
         ),
       ),
+
+      // Center container with max width constraint
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 680),
           child: registrations.isEmpty
+              // 1. Empty State View (shown before any registrations are submitted)
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -48,12 +61,15 @@ class RegistrationsListScreen extends StatelessWidget {
                     ],
                   ),
                 )
+              // 2. Populated List View (displays all registered students)
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: registrations.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final reg = registrations[index];
+
                     return Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -64,6 +80,7 @@ class RegistrationsListScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Pass ID and Time of Registration Row
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -86,6 +103,8 @@ class RegistrationsListScreen extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 8),
+
+                          // Student Name
                           Text(
                             reg.studentName,
                             style: const TextStyle(
@@ -95,6 +114,8 @@ class RegistrationsListScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 2),
+
+                          // Roll Number and College Email
                           Text(
                             'Roll: ${reg.rollNumber} • ${reg.email}',
                             style: const TextStyle(
@@ -103,6 +124,8 @@ class RegistrationsListScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
+
+                          // Event Name Tag
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,

@@ -3,6 +3,15 @@ import '../models/event_model.dart';
 import '../services/event_service.dart';
 import '../theme/app_theme.dart';
 
+/// RegistrationScreen: Form Screen to Register a Student for an Event
+///
+/// Concepts Used:
+/// 1. Form & `GlobalKey<FormState>`: Manages form validation state across all fields.
+/// 2. TextEditingControllers: Manages input text for Name, Roll No, and Email.
+/// 3. Memory Management: Controllers are disposed in dispose() to avoid memory leaks.
+/// 4. Regular Expressions (RegEx): Enforces institutional data standards.
+/// 5. Navigator.pushReplacementNamed: Replaces form in the navigation stack with
+///    the confirmation pass so the user cannot press Back to resubmit.
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
 
@@ -11,24 +20,33 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
+  // Global key uniquely identifying the Form widget to trigger validation
   final _formKey = GlobalKey<FormState>();
+
+  // Reference to the shared in-memory mock repository
   final EventService _eventService = EventService();
 
+  // Text editing controllers to capture user input
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _rollController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
+  // Error message state if registration fails (e.g., event full)
   String? _errorMessage;
 
   @override
   void dispose() {
+    // Clean up controllers when the widget is removed from the widget tree
     _nameController.dispose();
     _rollController.dispose();
     _emailController.dispose();
     super.dispose();
   }
 
-  // Form Validation Functions
+  /// Validates the student's full name:
+  /// - Non-empty
+  /// - Minimum 2 characters
+  /// - Only alphabetic characters, spaces, dots, or apostrophes
   String? _validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter your full name';
@@ -43,12 +61,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     return null;
   }
 
+  /// Validates the institutional 12-digit roll number:
+  /// - Must match ITM Skills University prefix: 150096724 + 3 student digits
+  /// - Example: 150096724125
   String? _validateRollNumber(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter your roll number';
     }
     final roll = value.trim();
-    // 12 digits total: 150096724 + 3 digits
     final rollRegex = RegExp(r'^150096724\d{3}$');
     if (!rollRegex.hasMatch(roll)) {
       return 'Roll number must be 12 digits starting with 150096724 (e.g. 150096724125)';
@@ -56,12 +76,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     return null;
   }
 
+  /// Validates the institutional email:
+  /// - Strictly enforces the @isu.ac.in domain
+  /// - Must follow standard format: YYYY.name@isu.ac.in (e.g., 2024.manthanb@isu.ac.in)
   String? _validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter your college email';
     }
     final email = value.trim();
-    // Institutional format: YYYY.name@isu.ac.in
     final emailRegex =
         RegExp(r'^\d{4}\.[a-zA-Z0-9._]+@isu\.ac\.in$', caseSensitive: false);
     if (!emailRegex.hasMatch(email)) {
@@ -70,13 +92,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     return null;
   }
 
+  /// Submits the registration form after validating all input fields
   void _submitForm(Event event) {
+    // Dismiss soft keyboard
     FocusScope.of(context).unfocus();
 
+    // Trigger validation on all FormFields; abort if any validator returns an error
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    // Attempt to register the student in our mock repository
     final reg = _eventService.registerStudent(
       eventId: event.id,
       studentName: _nameController.text,
@@ -85,13 +111,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
 
     if (reg != null) {
-      // Navigate to confirmation screen with the generated ticket pass
+      // Success: replace current route with confirmation screen passing ticket record
       Navigator.pushReplacementNamed(
         context,
         '/confirmation',
         arguments: reg,
       );
     } else {
+      // Event became full in the meantime
       setState(() {
         _errorMessage = 'Sorry, this event is already full.';
       });
@@ -100,6 +127,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Extract target event passed as named route argument
     final event = ModalRoute.of(context)?.settings.arguments as Event?;
 
     if (event == null) {
@@ -125,7 +153,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Form(
-              key: _formKey,
+              key: _formKey, // Connects the form key to validate children
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -192,7 +220,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Name Field
+                  // 1. Full Name Input Field
                   const Text(
                     'Full Name',
                     style: TextStyle(
@@ -214,7 +242,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
                   const SizedBox(height: 18),
 
-                  // Roll Number Field
+                  // 2. Roll Number Input Field
                   const Text(
                     'Roll Number',
                     style: TextStyle(
@@ -237,7 +265,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
                   const SizedBox(height: 18),
 
-                  // Email Address Field
+                  // 3. College Email Input Field
                   const Text(
                     'College Email',
                     style: TextStyle(
@@ -259,6 +287,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     onFieldSubmitted: (_) => _submitForm(event),
                   ),
 
+                  // Error Banner (displayed if event is full)
                   if (_errorMessage != null) ...[
                     const SizedBox(height: 16),
                     Container(
@@ -289,7 +318,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
                   const SizedBox(height: 32),
 
-                  // Submit Button
+                  // Submit Action Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

@@ -3,6 +3,16 @@ import '../models/event_model.dart';
 import '../services/event_service.dart';
 import '../theme/app_theme.dart';
 
+/// EventDetailScreen: Displays In-Depth Information for a Selected Fest Event
+///
+/// Concepts Used:
+/// 1. Extracting Route Arguments: Retrieves the passed 'Event' object via
+///    'ModalRoute.of(context)?.settings.arguments as Event?'.
+/// 2. Live State Synchronization: Re-fetches the event from 'EventService'
+///    to reflect the latest seat count.
+/// 3. Scrollable Content: Uses 'SingleChildScrollView' to prevent overflow on mobile.
+/// 4. Conditional Button State: The 'Register' button is automatically disabled (null)
+///    when seats reach 0.
 class EventDetailScreen extends StatefulWidget {
   const EventDetailScreen({super.key});
 
@@ -11,13 +21,15 @@ class EventDetailScreen extends StatefulWidget {
 }
 
 class _EventDetailScreenState extends State<EventDetailScreen> {
+  // Reference to the shared mock service
   final EventService _eventService = EventService();
 
   @override
   Widget build(BuildContext context) {
-    // Extract event passed via named route arguments
+    // Extract the event passed via named route arguments
     final initialEvent = ModalRoute.of(context)?.settings.arguments as Event?;
 
+    // Edge case safeguard: handles null argument gracefully
     if (initialEvent == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Event Details')),
@@ -27,12 +39,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       );
     }
 
-    // Always fetch the latest event data from the mock service
+    // Always fetch the latest event data from the mock service (e.g. updated seat count)
     final event = _eventService.getEventById(initialEvent.id) ?? initialEvent;
+
+    // Check availability flags
     final bool isSoldOut = event.seatsRemaining <= 0;
-    final bool isLowSeats = event.seatsRemaining > 0 && event.seatsRemaining <= 5;
+    final bool isLowSeats =
+        event.seatsRemaining > 0 && event.seatsRemaining <= 5;
 
     return Scaffold(
+      // AppBar with back button (automatically provided by Flutter for pushed routes)
       appBar: AppBar(
         title: const Text('Event Details'),
         bottom: PreferredSize(
@@ -40,6 +56,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           child: Container(color: AppTheme.border, height: 1),
         ),
       ),
+
+      // Center container with maximum width constraint for clean desktop/web viewing
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 680),
@@ -83,7 +101,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Seat Availability Card
+                // Seat Availability Status Card
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -93,6 +111,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ),
                   child: Row(
                     children: [
+                      // Status Dot (Red = Full, Orange = Low, Green = Available)
                       Container(
                         width: 10,
                         height: 10,
@@ -140,19 +159,23 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
                 const SizedBox(height: 24),
 
-                // Information details
+                // Event Meta: Date & Time
                 _buildInfoRow(
                   icon: Icons.calendar_today_outlined,
                   title: 'Date & Time',
                   subtitle: '${event.date} • ${event.time}',
                 ),
                 const Divider(height: 24, color: AppTheme.border),
+
+                // Event Meta: Venue
                 _buildInfoRow(
                   icon: Icons.location_on_outlined,
                   title: 'Venue',
                   subtitle: event.venue,
                 ),
                 const Divider(height: 24, color: AppTheme.border),
+
+                // Event Meta: Max Capacity
                 _buildInfoRow(
                   icon: Icons.people_outline,
                   title: 'Capacity',
@@ -161,7 +184,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
                 const SizedBox(height: 24),
 
-                // Description section
+                // About / Rules Section
                 const Text(
                   'About the Event',
                   style: TextStyle(
@@ -182,19 +205,20 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
                 const SizedBox(height: 36),
 
-                // Register Button
+                // Register Action Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: isSoldOut
-                        ? null
+                        ? null // Disables button when event is sold out
                         : () async {
-                            // Named route with arguments to Registration Form
+                            // Navigate to registration form passing the selected event
                             await Navigator.pushNamed(
                               context,
                               '/register',
                               arguments: event,
                             );
+                            // Refresh seat availability if user returns
                             setState(() {});
                           },
                     style: ElevatedButton.styleFrom(
@@ -214,6 +238,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
+  /// Helper widget to build metadata rows (icon + label + description)
   Widget _buildInfoRow({
     required IconData icon,
     required String title,
