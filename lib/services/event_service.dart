@@ -1,32 +1,26 @@
-import 'dart:async';
 import '../models/event_model.dart';
 import '../models/registration_model.dart';
 
-/// Central Event & Registration Service
-/// Implements a reactive, stream-based in-memory repository conforming
-/// to Cloud Firestore snapshot and document update patterns.
+/// Simple In-Memory Mock Service for FestConnect
+/// Stores mock events and registrations in Dart Lists (no external database).
 class EventService {
+  // Singleton pattern: ensures all screens share the exact same mock data
   static final EventService _instance = EventService._internal();
   factory EventService() => _instance;
 
   EventService._internal() {
-    _initSampleEvents();
+    _loadSampleEvents();
   }
 
-  final List<Event> _events = [];
-  final List<Registration> _registrations = [];
+  // In-memory mock lists (held in RAM while app is running)
+  final List<Event> events = [];
+  final List<Registration> registrations = [];
 
-  // Broadcast stream controller to notify screens of live updates
-  final StreamController<List<Event>> _eventsController =
-      StreamController<List<Event>>.broadcast();
+  List<Event> get allEvents => events;
+  List<Registration> get allRegistrations => registrations;
 
-  Stream<List<Event>> get eventsStream => _eventsController.stream;
-
-  List<Event> get allEvents => List.unmodifiable(_events);
-  List<Registration> get allRegistrations => List.unmodifiable(_registrations);
-
-  void _initSampleEvents() {
-    _events.addAll([
+  void _loadSampleEvents() {
+    events.addAll([
       Event(
         id: 'ev-1',
         name: 'AI & Web3 Hackathon',
@@ -90,37 +84,31 @@ class EventService {
     ]);
   }
 
+  // Find an event by its ID
   Event? getEventById(String id) {
     try {
-      return _events.firstWhere((e) => e.id == id);
+      return events.firstWhere((e) => e.id == id);
     } catch (_) {
       return null;
     }
   }
 
-  /// Live stream for a specific event to show real-time seat count
-  Stream<Event?> watchEvent(String id) {
-    return eventsStream
-        .map((events) => getEventById(id))
-        .asBroadcastStream();
-  }
-
-  /// Registers a student for an event and decrements available seats
-  Future<Registration?> registerStudent({
+  // Register student: decrements seat count and adds a registration record
+  Registration? registerStudent({
     required String eventId,
     required String studentName,
     required String rollNumber,
     required String email,
-  }) async {
-    final eventIndex = _events.indexWhere((e) => e.id == eventId);
-    if (eventIndex == -1) return null;
+  }) {
+    final event = getEventById(eventId);
+    if (event == null || event.seatsRemaining <= 0) {
+      return null;
+    }
 
-    final event = _events[eventIndex];
-    if (event.seatsRemaining <= 0) return null;
-
-    // Decrement seats
+    // Decrease available seats in mock list
     event.seatsRemaining -= 1;
 
+    // Create new registration record
     final registration = Registration(
       id: 'REG-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
       eventId: event.id,
@@ -131,19 +119,7 @@ class EventService {
       registeredAt: DateTime.now(),
     );
 
-    _registrations.add(registration);
-
-    // Notify all active listeners across screens
-    _eventsController.add(List.from(_events));
-
+    registrations.add(registration);
     return registration;
-  }
-
-  List<Registration> getRegistrationsForEvent(String eventId) {
-    return _registrations.where((r) => r.eventId == eventId).toList();
-  }
-
-  void dispose() {
-    _eventsController.close();
   }
 }

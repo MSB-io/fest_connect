@@ -25,10 +25,11 @@ As mandated by the case study (*"With Proper Justification"*):
    * Native graphics rendering via Flutter’s Impeller/Skia engine ensures smooth 60fps scrolling and card transitions.
    * Faster development and zero divergence between platforms.
 
-2. **Why a Reactive Stream Repository Architecture?**
-   * Built using Dart's broadcast `StreamController` to replicate Cloud Firestore snapshot behavior with zero external cloud billing or authentication dependencies.
-   * Ensures instant, offline-capable, and 100% reliable seat decrementing during live evaluations and demos.
-   * Decoupled architecture allows plug-and-play binding with Cloud Firestore if credentials are provided in production.
+2. **Why an In-Memory Mock Repository Architecture?**
+   * Stored in RAM using standard Dart Lists (`List<Event>` and `List<Registration>`).
+   * No external server, database file, or network required, ensuring 100% reliable, zero-latency execution during evaluation.
+   * Decrements seat counters in memory and logs student registrations immediately.
+   * Cleanly decoupled service layer that can be easily wired to SQLite or Firebase in production.
 
 3. **Why Minimal Black & White Material 3 Styling?**
    * Clean, distraction-free monochrome aesthetic with high-contrast typography and subtle borders (`#E4E4E7`).
@@ -48,10 +49,10 @@ lib/
 │   ├── event_model.dart               # Event data entity
 │   └── registration_model.dart        # Student registration record entity
 ├── services/
-│   └── event_service.dart             # Central reactive repository with live streams
+│   └── event_service.dart             # Central in-memory mock repository
 ├── screens/
 │   ├── event_list_screen.dart         # ListView, Cards, ChoiceChips, dynamic filter
-│   ├── event_detail_screen.dart       # Expanded details, live seat count stream
+│   ├── event_detail_screen.dart       # Expanded details, live seat availability
 │   ├── registration_screen.dart       # Form with Name, Roll No, Email validation
 │   ├── confirmation_screen.dart       # Ticket pass receipt with generated Pass ID
 │   └── registrations_list_screen.dart # Organizer participation tracker

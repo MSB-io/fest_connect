@@ -18,7 +18,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _rollController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
-  bool _isSubmitting = false;
   String? _errorMessage;
 
   @override
@@ -29,7 +28,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     super.dispose();
   }
 
-  // Mandatory Form Validators as per Case Study Requirements
+  // Form Validation Functions
   String? _validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter your full name';
@@ -49,7 +48,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return 'Please enter your roll number';
     }
     final roll = value.trim();
-    // Institutional roll number: 150096724 + 3 digits (12 digits total)
+    // 12 digits total: 150096724 + 3 digits
     final rollRegex = RegExp(r'^150096724\d{3}$');
     if (!rollRegex.hasMatch(roll)) {
       return 'Roll number must be 12 digits starting with 150096724 (e.g. 150096724125)';
@@ -62,7 +61,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return 'Please enter your college email';
     }
     final email = value.trim();
-    // Institutional email format: YYYY.name@isu.ac.in
+    // Institutional format: YYYY.name@isu.ac.in
     final emailRegex =
         RegExp(r'^\d{4}\.[a-zA-Z0-9._]+@isu\.ac\.in$', caseSensitive: false);
     if (!emailRegex.hasMatch(email)) {
@@ -71,34 +70,22 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     return null;
   }
 
-  Future<void> _submitForm(Event event) async {
-    // Dismiss keyboard
+  void _submitForm(Event event) {
     FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
-
-    final reg = await _eventService.registerStudent(
+    final reg = _eventService.registerStudent(
       eventId: event.id,
       studentName: _nameController.text,
       rollNumber: _rollController.text,
       email: _emailController.text,
     );
 
-    if (!mounted) return;
-
-    setState(() {
-      _isSubmitting = false;
-    });
-
     if (reg != null) {
-      // Navigate to confirmation screen with named route and pass registration as arguments
+      // Navigate to confirmation screen with the generated ticket pass
       Navigator.pushReplacementNamed(
         context,
         '/confirmation',
@@ -106,14 +93,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       );
     } else {
       setState(() {
-        _errorMessage = 'Sorry, this event is already full or unavailable.';
+        _errorMessage = 'Sorry, this event is already full.';
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Extract Event from route arguments
     final event = ModalRoute.of(context)?.settings.arguments as Event?;
 
     if (event == null) {
@@ -307,23 +293,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : () => _submitForm(event),
+                      onPressed: () => _submitForm(event),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: _isSubmitting
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(
-                              'Complete Registration',
-                              style: TextStyle(fontSize: 15),
-                            ),
+                      child: const Text(
+                        'Complete Registration',
+                        style: TextStyle(fontSize: 15),
+                      ),
                     ),
                   ),
                 ],

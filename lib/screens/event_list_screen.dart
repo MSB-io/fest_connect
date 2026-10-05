@@ -22,6 +22,16 @@ class _EventListScreenState extends State<EventListScreen> {
     'Creative',
   ];
 
+  // Helper to get events filtered by selected category
+  List<Event> get _filteredEvents {
+    if (_selectedCategory == 'All') {
+      return _eventService.events;
+    }
+    return _eventService.events
+        .where((e) => e.category == _selectedCategory)
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,7 +86,7 @@ class _EventListScreenState extends State<EventListScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
+                    const Text(
                       'Browse events, check live seats, and register instantly.',
                       style: TextStyle(
                         fontSize: 14,
@@ -127,21 +137,10 @@ class _EventListScreenState extends State<EventListScreen> {
 
               const SizedBox(height: 8),
 
-              // StreamBuilder for real-time live events list
+              // Events List (plain ListView with mock data)
               Expanded(
-                child: StreamBuilder<List<Event>>(
-                  stream: _eventService.eventsStream,
-                  initialData: _eventService.allEvents,
-                  builder: (context, snapshot) {
-                    final events = snapshot.data ?? [];
-                    final filteredEvents = _selectedCategory == 'All'
-                        ? events
-                        : events
-                            .where((e) => e.category == _selectedCategory)
-                            .toList();
-
-                    if (filteredEvents.isEmpty) {
-                      return Center(
+                child: _filteredEvents.isEmpty
+                    ? Center(
                         child: Text(
                           'No events found in $_selectedCategory.',
                           style: const TextStyle(
@@ -149,20 +148,16 @@ class _EventListScreenState extends State<EventListScreen> {
                             color: AppTheme.textMuted,
                           ),
                         ),
-                      );
-                    }
-
-                    return ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      itemCount: filteredEvents.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final event = filteredEvents[index];
-                        return _buildEventCard(context, event);
-                      },
-                    );
-                  },
-                ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        itemCount: _filteredEvents.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final event = _filteredEvents[index];
+                          return _buildEventCard(context, event);
+                        },
+                      ),
               ),
             ],
           ),
@@ -178,13 +173,14 @@ class _EventListScreenState extends State<EventListScreen> {
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          // Navigate to Event Detail using named route with arguments
-          Navigator.pushNamed(
+        onTap: () async {
+          // Open details and refresh list on return
+          await Navigator.pushNamed(
             context,
             '/detail',
             arguments: event,
           );
+          setState(() {});
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -265,18 +261,18 @@ class _EventListScreenState extends State<EventListScreen> {
               // Date and Venue
               Row(
                 children: [
-                  Icon(Icons.calendar_today_outlined,
+                  const Icon(Icons.calendar_today_outlined,
                       size: 14, color: AppTheme.textSecondary),
                   const SizedBox(width: 6),
                   Text(
                     event.date,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.textSecondary,
                     ),
                   ),
                   const SizedBox(width: 14),
-                  Icon(Icons.location_on_outlined,
+                  const Icon(Icons.location_on_outlined,
                       size: 14, color: AppTheme.textSecondary),
                   const SizedBox(width: 6),
                   Expanded(
@@ -284,7 +280,7 @@ class _EventListScreenState extends State<EventListScreen> {
                       event.venue,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: AppTheme.textSecondary,
                       ),
@@ -301,7 +297,7 @@ class _EventListScreenState extends State<EventListScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'Tap to view details',
                     style: TextStyle(
                       fontSize: 12,
@@ -311,13 +307,14 @@ class _EventListScreenState extends State<EventListScreen> {
                   ElevatedButton(
                     onPressed: isSoldOut
                         ? null
-                        : () {
+                        : () async {
                             // Direct named route with arguments to registration
-                            Navigator.pushNamed(
+                            await Navigator.pushNamed(
                               context,
                               '/register',
                               arguments: event,
                             );
+                            setState(() {});
                           },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
